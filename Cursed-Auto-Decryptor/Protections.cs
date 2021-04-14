@@ -31,8 +31,8 @@ namespace Cursed_Auto_Decryptor
 
                         if (IL[x].OpCode == OpCodes.Call &&
                             IL[x].Operand.ToString().Contains("<System.String>") &&
-                            IL[x].Operand is MethodSpec &&
-                            ((MethodSpec)IL[x].Operand).GenericInstMethodSig.GenericArguments.Count == 1) // TODO : Add More Check For More Accuracy
+                            IL[x].Operand is MethodSpec _spec &&
+                            _spec.GenericInstMethodSig.GenericArguments.Count == 1) // TODO : Add More Check For More Accuracy
                         {
                             try {
                                 object Result = null;
@@ -42,7 +42,7 @@ namespace Cursed_Auto_Decryptor
                                     Result = InvokeAsDynamic(Context.Ass.ManifestModule, MethodDef, DecMethod.ResolveMethodDef(), ReturnedParams);
                                 else
                                     Result = ((MethodInfo)Context.Ass.ManifestModule.ResolveMethod((int)DecMethod.MDToken.Raw)).Invoke(null, ReturnedParams);
-                                Context.Log.Information($"Resorted String : {Result.ToString()}");
+                                Context.Log.Information($"Restored String : {Result.ToString()}");
                                 var _ldstr = OpCodes.Ldstr.ToInstruction(Result.ToString());
                                 IL[x].OpCode = _ldstr.OpCode;
                                 IL[x].Operand = _ldstr.Operand;
