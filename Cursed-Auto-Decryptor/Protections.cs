@@ -31,8 +31,8 @@ namespace Cursed_Auto_Decryptor
 
                         if (IL[x].OpCode == OpCodes.Call &&
                             IL[x].Operand.ToString().Contains("<System.String>") &&
-                            IL[x].Operand is MethodSpec &&
-                            ((MethodSpec)IL[x].Operand).GenericInstMethodSig.GenericArguments.Count == 1) // TODO : Add More Check For More Accuracy
+                            IL[x].Operand is MethodSpec _spec &&
+                            _spec.GenericInstMethodSig.GenericArguments.Count == 1) // TODO : Add More Check For More Accuracy
                         {
                             try {
                                 object Result = null;
