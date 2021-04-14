@@ -22,27 +22,23 @@ namespace Cursed_Auto_Decryptor
         }
         public void DecryptConstants(Context Context)
         {
-            foreach (var TypeDef in Context.Module.Types.Where(x => x.HasMethods && !x.IsGlobalModuleType))
-            {
-                foreach (var MethodDef in TypeDef.Methods.Where(x => x.HasBody))
-                {
-                    MethodDef.Body.SimplifyBranches();
-                    MethodDef.Body.SimplifyMacros(MethodDef.Parameters);
-                    IList<Instruction> IL = MethodDef.Body.Instructions.ToList();
-                    for (int x = 0; x < IL.Count; x++)
-                    {
+            foreach (var TypeDef in Context.Module.GetTypes().Where(x => x.HasMethods && !x.IsGlobalModuleType)) {
+                foreach (var MethodDef in TypeDef.Methods.Where(x => x.HasBody)) {
+
+                    MethodDef.Body.ExpandBody(MethodDef.Parameters);
+                    IList<Instruction> IL = MethodDef.Body.Instructions;
+                    for (int x = 0; x < IL.Count; x++) {
+
                         if (IL[x].OpCode == OpCodes.Call &&
                             IL[x].Operand.ToString().Contains("<System.String>") &&
                             IL[x].Operand is MethodSpec &&
                             ((MethodSpec)IL[x].Operand).GenericInstMethodSig.GenericArguments.Count == 1) // TODO : Add More Check For More Accuracy
                         {
-                            try
-                            {
+                            try {
                                 object Result = null;
                                 IMethod DecMethod = (IMethod)IL[x].Operand;
-                                var ParamsC = DecMethod.GetParams().Count;
                                 var ReturnedParams = ParseParams(IL, Context, DecMethod, x);
-                                if (DecMethod.ResolveMethodDef().Body.Instructions.Any<Instruction>(i => i.ToString().Contains("StackTrace") || i.ToString().Contains("GetCallingAssembly")))
+                                if (DecMethod.ResolveMethodDef().Body.Instructions.Any(i => i.ToString().Contains("StackTrace") || i.ToString().Contains("GetCallingAssembly") || i.ToString().Contains("GetEntryAssembly")))
                                     Result = InvokeAsDynamic(Context.Ass.ManifestModule, MethodDef, DecMethod.ResolveMethodDef(), ReturnedParams);
                                 else
                                     Result = ((MethodInfo)Context.Ass.ManifestModule.ResolveMethod((int)DecMethod.MDToken.Raw)).Invoke(null, ReturnedParams);
@@ -50,19 +46,15 @@ namespace Cursed_Auto_Decryptor
                                 var _ldstr = OpCodes.Ldstr.ToInstruction(Result.ToString());
                                 IL[x].OpCode = _ldstr.OpCode;
                                 IL[x].Operand = _ldstr.Operand;
-                                foreach (var i in ToRemoveInst) {
-                                    i.OpCode = OpCodes.Nop;
-                                    i.Operand = null;
-                                }
+                                foreach (var i in ToRemoveInst) 
+                                    i.NopInstruction();
                             }
-                            catch (Exception e)
-                            {
+                            catch (Exception e) {
                                 Context.Log.Error(e.Message);
                             }
                         }
                     }
-                    MethodDef.Body.OptimizeBranches();
-                    MethodDef.Body.OptimizeMacros();
+                    MethodDef.Body.OptimzeBody();
                 }
             }
         }
