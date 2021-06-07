@@ -1,3 +1,6 @@
+# Please Note (This Project Is UnMaintained anymore)
+- All Updates Will Be Merged Into [UnSealer](https://github.com/CursedLand/UnSealer)
+
 # Cursed-Auto-Decryptor
 - Cfex Auto Constants Decryptor
 
